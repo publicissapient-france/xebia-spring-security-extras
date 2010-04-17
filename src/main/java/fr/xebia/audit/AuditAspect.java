@@ -15,12 +15,13 @@
  */
 package fr.xebia.audit;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.lang.time.DateFormatUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -88,6 +89,27 @@ public class AuditAspect {
         }
     }
 
+    protected static void appendThrowableCauses(Throwable throwable, String separator, StringBuilder toAppendTo) {
+        List<Throwable> alreadyAppendedThrowables = new ArrayList<Throwable>();
+
+        while (throwable != null) {
+            // append
+            toAppendTo.append(throwable.toString());
+            alreadyAppendedThrowables.add(throwable);
+
+            // cause
+            Throwable cause = throwable.getCause();
+            if (cause == null || alreadyAppendedThrowables.contains(cause)) {
+                break;
+            } else {
+                throwable = cause;
+                toAppendTo.append(separator);
+            }
+        }
+    }
+
+    private SimpleDateFormat dateFormatPrototype = new SimpleDateFormat("yyyy/MM/dd-HH:mm:ss:SSS");
+
     private Map<String, Expression> expressionCache = new ConcurrentHashMap<String, Expression>();
 
     private ExpressionParser expressionParser = new SpelExpressionParser();
@@ -108,12 +130,14 @@ public class AuditAspect {
 
             StringBuilder msg = new StringBuilder();
 
-            msg.append(DateFormatUtils.format(System.currentTimeMillis(), "yyyy/MM/dd-HH:mm:ss:SSS"));
+            SimpleDateFormat simpleDateFormat = (SimpleDateFormat) dateFormatPrototype.clone();
+            msg.append(simpleDateFormat.format(new Date()));
 
             msg.append(" ").append(evaluatedMessage);
 
             if (throwned != null) {
-                msg.append(" throwing '").append(StringUtils.join(ExceptionUtils.getThrowableList(throwned), ", ")).append("'");
+                msg.append(" throwing '");
+                appendThrowableCauses(throwned, ", ", msg);
             }
             msg.append(" by ");
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -128,7 +152,9 @@ public class AuditAspect {
             }
             return msg.toString();
         } catch (RuntimeException e) {
-            return "Exception evaluating template '" + template + "': " + StringUtils.join(ExceptionUtils.getThrowableList(throwned), ", ");
+            StringBuilder msg = new StringBuilder("Exception evaluating template '" + template + "': ");
+            appendThrowableCauses(e, ", ", msg);
+            return msg.toString();
         }
     }
 
