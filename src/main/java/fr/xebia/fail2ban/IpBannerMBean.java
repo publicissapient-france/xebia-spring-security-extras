@@ -64,4 +64,6 @@ public interface IpBannerMBean {
     int getMaxBucketRecycleCount();
 
     void setMaxBucketRecycleCount(int maxBucketRecycleCount);
+
+    int getFailedIpsQueueSize();
 }

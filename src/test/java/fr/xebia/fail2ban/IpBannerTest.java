@@ -27,6 +27,8 @@ import fr.xebia.fail2ban.IpBanner.Bucket;
  * @author <a href="mailto:cyrille@cyrilleleclerc.com">Cyrille Le Clerc</a>
  */
 public class IpBannerTest {
+    
+    private int asyncPropagationDelayInMillis = 10;
 
     @Test
     public void testBanWithAllFailuresTheSoleBucket() throws Exception {
@@ -45,6 +47,7 @@ public class IpBannerTest {
             Assert.assertFalse("ip must NOT be banned after " + (i + 1) + " failures", banner.isIpBanned("9.0.0.1"));
         }
         banner.incrementFailureCounter("9.0.0.1");
+        Thread.sleep(asyncPropagationDelayInMillis);
         Assert.assertTrue("ip must be banned", banner.isIpBanned("9.0.0.1"));
     }
 
@@ -64,10 +67,12 @@ public class IpBannerTest {
 
         for (int i = 0; i < maxRetry; i++) {
             banner.incrementFailureCounter("9.0.0.1");
+            Thread.sleep(asyncPropagationDelayInMillis);
             Assert.assertFalse("ip must NOT be banned after " + (i + 1) + " failures", banner.isIpBanned("9.0.0.1"));
             banner.rotateBuckets();
         }
         banner.incrementFailureCounter("9.0.0.1");
+        Thread.sleep(asyncPropagationDelayInMillis);
         Assert.assertTrue("ip must be banned", banner.isIpBanned("9.0.0.1"));
     }
 
@@ -87,11 +92,15 @@ public class IpBannerTest {
 
         for (int i = 0; i < maxRetry; i++) {
             banner.incrementFailureCounter("9.0.0.1");
+            Thread.sleep(asyncPropagationDelayInMillis);
+
             Assert.assertFalse("ip must NOT be banned after " + (i + 1) + " failures", banner.isIpBanned("9.0.0.1"));
             banner.rotateBuckets();
             banner.rotateBuckets();
         }
         banner.incrementFailureCounter("9.0.0.1");
+        Thread.sleep(asyncPropagationDelayInMillis);
+
         Assert.assertTrue("ip must be banned", banner.isIpBanned("9.0.0.1"));
     }
 }

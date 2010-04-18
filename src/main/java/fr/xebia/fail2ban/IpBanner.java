@@ -17,11 +17,11 @@ package fr.xebia.fail2ban;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
@@ -125,7 +125,7 @@ public class IpBanner implements IpBannerMBean {
     /**
      * Visible for test
      */
-    protected BlockingDeque<Bucket> buckets;
+    protected BlockingQueue<Bucket> buckets;
 
     private ScheduledFuture<?> cleanerCommandFuture;
 
@@ -147,9 +147,40 @@ public class IpBanner implements IpBannerMBean {
 
     private ScheduledExecutorService rotateBucketsExecutor;
 
+    private BlockingQueue<String> failedIps = new LinkedBlockingQueue<String>();
+
+    private Thread failureIncrementorThread;
+
+    private String POISON = new String();
+
     public IpBanner() {
         rotateBucketsExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("ipbanner-bucket-rotator-"));
         cleanerScheduledExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("ipbanner-banned-ip-cleaner-"));
+        Runnable command = new Runnable() {
+
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        String ip = failedIps.take();
+                        if (ip == POISON) {
+                            break;
+                        } else {
+                            try {
+                                incrementFailureCounterSync(ip);
+                            } catch (RuntimeException e) {
+                                logger.error("Exception incrementing failure counter for '" + ip + "'", e);
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        logger.warn("InterruptedException in " + Thread.currentThread().getName() + " thread");
+                    }
+                }
+
+            }
+        };
+        failureIncrementorThread = new Thread(command, "ipbanner-banned-ip-failure-incrementor");
+        failureIncrementorThread.start();
     }
 
     public void banIp(String ip) {
@@ -184,12 +215,15 @@ public class IpBanner implements IpBannerMBean {
     }
 
     @PreDestroy
-    public void destroy() throws Exception {
+    public void destroy() throws InterruptedException {
         this.cleanerCommandFuture.cancel(false);
         this.cleanerScheduledExecutor.shutdown();
 
         this.rotateBucketsCommandFuture.cancel(false);
         this.rotateBucketsExecutor.shutdown();
+
+        this.failedIps.put(POISON);
+        this.failureIncrementorThread.join();
 
         logger.info(getClass().getSimpleName() + " stopped");
     }
@@ -230,7 +264,19 @@ public class IpBanner implements IpBannerMBean {
         return maxRetry;
     }
 
-    public void incrementFailureCounter(String ip) {
+    public int getFailedIpsQueueSize() {
+        return failedIps.size();
+    }
+
+    public void incrementFailureCounter(final String ip) {
+        try {
+            failedIps.put(ip);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Exception adding ip '" + ip + "' to the failedIps queue", e);
+        }
+    }
+
+    protected void incrementFailureCounterSync(String ip) {
 
         failedAuthenticationCount.incrementAndGet();
 
@@ -268,7 +314,7 @@ public class IpBanner implements IpBannerMBean {
     @PostConstruct
     public void initialize() {
 
-        buckets = new LinkedBlockingDeque<Bucket>(bucketCount);
+        buckets = new LinkedBlockingQueue<Bucket>(bucketCount);
         buckets.add(new Bucket());
 
         Runnable rotateBucketsCommand = new Runnable() {
@@ -322,7 +368,7 @@ public class IpBanner implements IpBannerMBean {
         // REMOVE OLDEST BUCKET IF QUEUE IS FULL
         Bucket bucket;
         if (buckets.remainingCapacity() == 0) {
-            bucket = buckets.pollLast();
+            bucket = buckets.poll();
             logger.debug("Remove {}", bucket);
             // recycle bucket
             bucket.recycle();
@@ -331,7 +377,7 @@ public class IpBanner implements IpBannerMBean {
         }
 
         // ADD NEW BUCKET
-        boolean offered = buckets.offerFirst(bucket);
+        boolean offered = buckets.offer(bucket);
         if (!offered) {
             logger.warn("failed to insert a new bucket");
         }
