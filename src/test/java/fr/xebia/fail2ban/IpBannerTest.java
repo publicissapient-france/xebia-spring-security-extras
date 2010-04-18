@@ -43,10 +43,10 @@ public class IpBannerTest {
         banner.setMaxRetry(maxRetry);
 
         for (int i = 0; i < maxRetry; i++) {
-            banner.incrementFailureCounter("9.0.0.1");
+            banner.incrementFailureCounterSync("9.0.0.1");
             Assert.assertFalse("ip must NOT be banned after " + (i + 1) + " failures", banner.isIpBanned("9.0.0.1"));
         }
-        banner.incrementFailureCounter("9.0.0.1");
+        banner.incrementFailureCounterSync("9.0.0.1");
         Thread.sleep(asyncPropagationDelayInMillis);
         Assert.assertTrue("ip must be banned", banner.isIpBanned("9.0.0.1"));
     }
@@ -66,12 +66,12 @@ public class IpBannerTest {
         Assert.assertTrue("maxRetry<bucketCount", maxRetry < bucketCount);
 
         for (int i = 0; i < maxRetry; i++) {
-            banner.incrementFailureCounter("9.0.0.1");
+            banner.incrementFailureCounterSync("9.0.0.1");
             Thread.sleep(asyncPropagationDelayInMillis);
             Assert.assertFalse("ip must NOT be banned after " + (i + 1) + " failures", banner.isIpBanned("9.0.0.1"));
             banner.rotateBuckets();
         }
-        banner.incrementFailureCounter("9.0.0.1");
+        banner.incrementFailureCounterSync("9.0.0.1");
         Thread.sleep(asyncPropagationDelayInMillis);
         Assert.assertTrue("ip must be banned", banner.isIpBanned("9.0.0.1"));
     }
@@ -91,14 +91,14 @@ public class IpBannerTest {
         Assert.assertTrue("maxRetry<bucketCount", 2 * maxRetry < bucketCount);
 
         for (int i = 0; i < maxRetry; i++) {
-            banner.incrementFailureCounter("9.0.0.1");
+            banner.incrementFailureCounterSync("9.0.0.1");
             Thread.sleep(asyncPropagationDelayInMillis);
 
             Assert.assertFalse("ip must NOT be banned after " + (i + 1) + " failures", banner.isIpBanned("9.0.0.1"));
             banner.rotateBuckets();
             banner.rotateBuckets();
         }
-        banner.incrementFailureCounter("9.0.0.1");
+        banner.incrementFailureCounterSync("9.0.0.1");
         Thread.sleep(asyncPropagationDelayInMillis);
 
         Assert.assertTrue("ip must be banned", banner.isIpBanned("9.0.0.1"));

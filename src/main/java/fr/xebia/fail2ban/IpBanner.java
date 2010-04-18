@@ -17,10 +17,12 @@ package fr.xebia.fail2ban;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -125,7 +127,7 @@ public class IpBanner implements IpBannerMBean {
     /**
      * Visible for test
      */
-    protected BlockingQueue<Bucket> buckets;
+    protected BlockingDeque<Bucket> buckets;
 
     private ScheduledFuture<?> cleanerCommandFuture;
 
@@ -314,7 +316,7 @@ public class IpBanner implements IpBannerMBean {
     @PostConstruct
     public void initialize() {
 
-        buckets = new LinkedBlockingQueue<Bucket>(bucketCount);
+        buckets = new LinkedBlockingDeque<Bucket>(bucketCount);
         buckets.add(new Bucket());
 
         Runnable rotateBucketsCommand = new Runnable() {
@@ -368,7 +370,7 @@ public class IpBanner implements IpBannerMBean {
         // REMOVE OLDEST BUCKET IF QUEUE IS FULL
         Bucket bucket;
         if (buckets.remainingCapacity() == 0) {
-            bucket = buckets.poll();
+            bucket = buckets.pollLast();
             logger.debug("Remove {}", bucket);
             // recycle bucket
             bucket.recycle();
@@ -377,7 +379,7 @@ public class IpBanner implements IpBannerMBean {
         }
 
         // ADD NEW BUCKET
-        boolean offered = buckets.offer(bucket);
+        boolean offered = buckets.offerFirst(bucket);
         if (!offered) {
             logger.warn("failed to insert a new bucket");
         }
