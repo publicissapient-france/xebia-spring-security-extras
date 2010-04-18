@@ -31,17 +31,9 @@ public interface IpBannerMBean {
 
     int getBannedIpCount();
 
-    int getBatchBannerExecutionCount();
-
-    long getBatchBannerTotalDurationInMillis();
-
     int getCleanerCommandIntervalInSeconds();
 
-    int getCleanerExecutionCount();
-
-    long getCleanerTotalDurationInMillis();
-
-    int getBucketsCount();
+    int getBucketCount();
 
     int getFailedAuthenticationCount();
 
@@ -69,4 +61,7 @@ public interface IpBannerMBean {
 
     void setMaxRetry(int failureCountThreshold);
 
+    int getMaxBucketRecycleCount();
+
+    void setMaxBucketRecycleCount(int maxBucketRecycleCount);
 }

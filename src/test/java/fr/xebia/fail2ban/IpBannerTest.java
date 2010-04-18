@@ -15,111 +15,83 @@
  */
 package fr.xebia.fail2ban;
 
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.LinkedBlockingDeque;
 
-import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
-import javax.management.ObjectName;
-
+import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
+import fr.xebia.fail2ban.IpBanner.Bucket;
 
 /**
  * 
  * @author <a href="mailto:cyrille@cyrilleleclerc.com">Cyrille Le Clerc</a>
  */
 public class IpBannerTest {
-    private Logger logger = LoggerFactory.getLogger(IpBannerTest.class);
 
     @Test
-    public void test() throws Exception {
-        ScheduledExecutorService rotateBucketsAndBanIpsCommandScheduledExecutor = Executors.newScheduledThreadPool(1, new CustomizableThreadFactory(
-        "ip-banner-rotator"));
-        ScheduledExecutorService cleanerScheduledExecutor = Executors.newScheduledThreadPool(1, new CustomizableThreadFactory(
-        "ip-banner-rotator"));
-        final Random random = new Random();
-        final int numberOfUnfrequentlyFailedIp = 100000;
-        final int numberOfFrequentlyFailedIp = 10000;
-        final int pounderThreadCount = 50;
-        final int pounderPerThreadInvocationCount = 1000000;
-        final int pounderPerThreadInvocationThinkTimeInMillis = 25;
-
-        ExecutorService pounderExecutorService = Executors.newFixedThreadPool(pounderThreadCount, new CustomizableThreadFactory("pounder"));
+    public void testBanWithAllFailuresTheSoleBucket() throws Exception {
+        int maxRetry = 11;
+        int bucketCount = 6;
 
         final IpBanner banner = new IpBanner();
-        MBeanServer mbeanServer = getMBeanServer();
-        ObjectName bannerObjectName = mbeanServer.registerMBean(banner, new ObjectName("fr.xebia:type=RemoteAddressBanner"))
-                .getObjectName();
-        try {
-            banner.setFindTimeInSeconds(60);
-            banner.setBanTimeInSeconds(4);
-            banner.setCleanerCommandIntervalInSeconds(4);
-            banner.setMaxRetry(11);
-            banner.setRotateBucketsAndBanIpsCommandScheduledExecutor(rotateBucketsAndBanIpsCommandScheduledExecutor);
-            banner.setCleanerScheduledExecutor(cleanerScheduledExecutor);
-            banner.initialize();
+        banner.setBanTimeInSeconds(4);
+        banner.buckets = new LinkedBlockingDeque<Bucket>(bucketCount);
+        banner.rotateBuckets();
 
-            for (int i = 0; i <= pounderThreadCount; i++) {
-                Runnable command = new Runnable() {
-                    public void run() {
-                        for (int i = 0; i < pounderPerThreadInvocationCount; i++) {
-                            {
-                                String ip = "frequent-ip-" + random.nextInt(numberOfFrequentlyFailedIp);
-                                if (banner.isIpBanned(ip)) {
-                                    logger.debug("Skip banned ip {}", ip);
-                                } else {
-                                    banner.incrementFailureCounter(ip);
-                                }
-                            }
-                            {
-                                String ip = "unfrequent-ip-" + random.nextInt(numberOfUnfrequentlyFailedIp);
-                                if (banner.isIpBanned(ip)) {
-                                    logger.debug("Skip banned ip {}", ip);
-                                } else {
-                                    banner.incrementFailureCounter(ip);
-                                }
-                            }
-                            try {
-                                Thread.sleep(random.nextInt(pounderPerThreadInvocationThinkTimeInMillis));
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    };
-                };
+        banner.setMaxRetry(maxRetry);
 
-                pounderExecutorService.execute(command);
-            }
-
-            pounderExecutorService.shutdown();
-            pounderExecutorService.awaitTermination(30, TimeUnit.MINUTES);
-        } finally {
-            banner.destroy();
-            rotateBucketsAndBanIpsCommandScheduledExecutor.shutdown();            
-            cleanerScheduledExecutor.shutdown();
-
-            mbeanServer.unregisterMBean(bannerObjectName);
-            logger.error(banner.toString());
+        for (int i = 0; i < maxRetry; i++) {
+            banner.incrementFailureCounter("9.0.0.1");
+            Assert.assertFalse("ip must NOT be banned after " + (i + 1) + " failures", banner.isIpBanned("9.0.0.1"));
         }
+        banner.incrementFailureCounter("9.0.0.1");
+        Assert.assertTrue("ip must be banned", banner.isIpBanned("9.0.0.1"));
     }
 
-    private MBeanServer getMBeanServer() throws RemoteException {
-        ArrayList<MBeanServer> mbeanServersList = MBeanServerFactory.findMBeanServer(null);
-        MBeanServer mbeanServer;
-        if (mbeanServersList.isEmpty()) {
-            mbeanServer = MBeanServerFactory.createMBeanServer();
-        } else {
-            mbeanServer = mbeanServersList.get(0);
+    @Test
+    public void testBanWithOneFailurePerBucket() throws Exception {
+        int maxRetry = 5;
+        int bucketCount = 6;
+
+        final IpBanner banner = new IpBanner();
+        banner.setBanTimeInSeconds(4);
+        banner.buckets = new LinkedBlockingDeque<Bucket>(bucketCount);
+        banner.rotateBuckets();
+
+        banner.setMaxRetry(maxRetry);
+
+        Assert.assertTrue("maxRetry<bucketCount", maxRetry < bucketCount);
+
+        for (int i = 0; i < maxRetry; i++) {
+            banner.incrementFailureCounter("9.0.0.1");
+            Assert.assertFalse("ip must NOT be banned after " + (i + 1) + " failures", banner.isIpBanned("9.0.0.1"));
+            banner.rotateBuckets();
         }
-        return mbeanServer;
+        banner.incrementFailureCounter("9.0.0.1");
+        Assert.assertTrue("ip must be banned", banner.isIpBanned("9.0.0.1"));
+    }
+
+    @Test
+    public void testBanWithOneFailureEveryTwoBucket() throws Exception {
+        int maxRetry = 5;
+        int bucketCount = 12;
+
+        final IpBanner banner = new IpBanner();
+        banner.setBanTimeInSeconds(4);
+        banner.buckets = new LinkedBlockingDeque<Bucket>(bucketCount);
+        banner.rotateBuckets();
+
+        banner.setMaxRetry(maxRetry);
+
+        Assert.assertTrue("maxRetry<bucketCount", 2 * maxRetry < bucketCount);
+
+        for (int i = 0; i < maxRetry; i++) {
+            banner.incrementFailureCounter("9.0.0.1");
+            Assert.assertFalse("ip must NOT be banned after " + (i + 1) + " failures", banner.isIpBanned("9.0.0.1"));
+            banner.rotateBuckets();
+            banner.rotateBuckets();
+        }
+        banner.incrementFailureCounter("9.0.0.1");
+        Assert.assertTrue("ip must be banned", banner.isIpBanned("9.0.0.1"));
     }
 }

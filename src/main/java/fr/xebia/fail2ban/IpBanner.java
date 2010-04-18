@@ -15,15 +15,16 @@
  */
 package fr.xebia.fail2ban;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,7 +35,6 @@ import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * Java port of <a href="http://www.fail2ban.org/">FailToBan</a>.
  * 
@@ -42,83 +42,126 @@ import org.slf4j.LoggerFactory;
  */
 public class IpBanner implements IpBannerMBean {
 
-    protected static class Bucket {
+    protected class Bucket {
 
-        private final long creationTime = System.currentTimeMillis();
+        private volatile long bucketChangeNumber = bucketChangeNumberCounter.incrementAndGet();
 
-        private final ConcurrentMap<String, AtomicInteger> failureCounterByIp = new ConcurrentHashMap<String, AtomicInteger>();
+        private volatile ConcurrentMap<String, AtomicInteger> failureCounterByIp = new ConcurrentHashMap<String, AtomicInteger>();
 
-        public long getBucketBeginningTime() {
-            return creationTime;
+        private AtomicInteger recycleCounter = new AtomicInteger();
+
+        public long getBucketChangeNumber() {
+            return bucketChangeNumber;
         }
 
-        public ConcurrentMap<String, AtomicInteger> getFailureCounterByIp() {
-            return failureCounterByIp;
+        public int getFailureCount(String ip) {
+            AtomicInteger atomicInteger = failureCounterByIp.get(ip);
+            int failureCount;
+            if (atomicInteger == null) {
+                failureCount = 0;
+            } else {
+                failureCount = atomicInteger.get();
+            }
+            return failureCount;
+        }
+
+        public int incrementFailureCountAndGet(String ip) {
+            AtomicInteger failureCounter = failureCounterByIp.get(ip);
+
+            if (failureCounter == null) {
+                failureCounter = new AtomicInteger();
+                // use string.intern() because this String will go in the old
+                // objects generation.
+                AtomicInteger concurrentlyAddedCounter = failureCounterByIp.put(ip.intern(), failureCounter);
+                if (concurrentlyAddedCounter != null) {
+                    failureCounter = concurrentlyAddedCounter;
+                }
+            }
+            return failureCounter.incrementAndGet();
+        }
+
+        public void recycle() {
+            bucketChangeNumber = bucketChangeNumberCounter.incrementAndGet();
+            if (recycleCounter.incrementAndGet() > maxBucketRecycleCount) {
+                failureCounterByIp = new ConcurrentHashMap<String, AtomicInteger>();
+            } else {
+                failureCounterByIp.clear();
+            }
         }
 
         @Override
         public String toString() {
-            return "Bucket[creationTime: " + this.creationTime + ", bannedIpCount: " + this.failureCounterByIp.size() + "]";
+            return "Bucket[changeNumber: " + this.bucketChangeNumber + ", bannedIpCount: " + this.failureCounterByIp.size() + "]";
         }
     }
 
-    static private class IpBannerStatistics {
-        private final AtomicInteger bannedIpCount = new AtomicInteger();
-        private final AtomicInteger batchBannerExecutionCount = new AtomicInteger();
-        private final AtomicLong batchBannerTotalDurationInMillis = new AtomicLong();
-        private final AtomicInteger cleanerExecutionCount = new AtomicInteger();
-        private final AtomicLong cleanerTotalDurationInMillis = new AtomicLong();
-        private final AtomicInteger failedAuthenticationCount = new AtomicInteger();
+    protected static class NamedThreadFactory implements ThreadFactory {
+
+        private final String namePrefix;
+
+        private final AtomicInteger threadCounter = new AtomicInteger();
+
+        private NamedThreadFactory(String namePrefix) {
+            super();
+            this.namePrefix = namePrefix;
+        }
 
         @Override
-        public String toString() {
-            return "IpBannerStatistics[" //
-                    + "bannedIpCount:" + bannedIpCount + ", " //
-                    + "batchBannerExecutionCount: " + batchBannerExecutionCount //
-                    + "batchBannerTotalDurationInMillis: " + batchBannerTotalDurationInMillis + ", " //
-                    + "cleanerExecutionCount: " + cleanerExecutionCount + ", " //
-                    + "cleanerTotalDurationInMillis: " + cleanerTotalDurationInMillis + ", " //
-                    + "failedAuthenticationCount: " + failedAuthenticationCount + ", " //
-                    + "]";
+        public Thread newThread(Runnable r) {
+            return new Thread(r, namePrefix + "-" + threadCounter.incrementAndGet());
         }
     }
+
+    private AtomicInteger bannedIpCount = new AtomicInteger();
 
     private ConcurrentMap<String, Long> bannedIpWithBanishmentTime = new ConcurrentHashMap<String, Long>();
 
     private long banTimeInMillis = 600;
 
-    private ScheduledFuture<?> batchBannerCommandFuture;
+    private AtomicLong bucketChangeNumberCounter = new AtomicLong();
 
-    protected int cleanerCommandIntervalInSeconds = 5;
+    private int bucketCount = 6;
 
-    private BlockingDeque<Bucket> buckets;
-
-    private int bucketsCount = 6;
+    /**
+     * Visible for test
+     */
+    protected BlockingDeque<Bucket> buckets;
 
     private ScheduledFuture<?> cleanerCommandFuture;
+
+    private int cleanerCommandIntervalInSeconds = 5;
+
+    private ScheduledExecutorService cleanerScheduledExecutor;
+
+    private AtomicInteger failedAuthenticationCount = new AtomicInteger();
 
     private int findTimeInSeconds = 600;
 
     private final Logger logger = LoggerFactory.getLogger(IpBanner.class);
 
+    private int maxBucketRecycleCount = 50;
+
     private int maxRetry = 10;
 
-    private ScheduledExecutorService rotateBucketsAndBanIpsCommandScheduledExecutor;
+    private ScheduledFuture<?> rotateBucketsCommandFuture;
 
-    private ScheduledExecutorService cleanerScheduledExecutor;
+    private ScheduledExecutorService rotateBucketsExecutor;
 
-    private final IpBannerStatistics statistics = new IpBannerStatistics();
+    public IpBanner() {
+        rotateBucketsExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("ipbanner-bucket-rotator-"));
+        cleanerScheduledExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("ipbanner-banned-ip-cleaner-"));
+    }
 
     public void banIp(String ip) {
         logger.info("Ban {}", ip);
         bannedIpWithBanishmentTime.put(ip, System.currentTimeMillis());
-        statistics.bannedIpCount.incrementAndGet();
+        bannedIpCount.incrementAndGet();
     }
 
     protected void clean() {
 
         long startupTime = System.currentTimeMillis();
-        int reenabledIpCounter = 0;
+        int unbannedIpCount = 0;
 
         try {
             long minimumBanishmentTime = System.currentTimeMillis() - banTimeInMillis;
@@ -126,64 +169,45 @@ public class IpBanner implements IpBannerMBean {
                 String bannedIp = entry.getKey();
                 Long banishmentTime = entry.getValue();
                 if (banishmentTime < minimumBanishmentTime) {
-                    logger.trace("Reenable banned ip {}", bannedIp);
+                    logger.info("Unban {}", bannedIp);
                     bannedIpWithBanishmentTime.remove(bannedIp, banishmentTime);
-                    reenabledIpCounter++;
+                    unbannedIpCount++;
                 }
             }
         } catch (RuntimeException e) {
-            logger.error("Exception batch cleaning banned ips", e);
+            logger.error("Exception batch unbanning ips", e);
         } finally {
-            statistics.cleanerExecutionCount.incrementAndGet();
             long durationInMillis = System.currentTimeMillis() - startupTime;
-            statistics.cleanerTotalDurationInMillis.addAndGet(durationInMillis);
-            logger.debug("Reenabled {} ips in {} ms", reenabledIpCounter, durationInMillis);
+            logger.debug("Unbanned {} ips in {} ms", unbannedIpCount, durationInMillis);
         }
 
     }
 
     @PreDestroy
     public void destroy() throws Exception {
-        if (this.cleanerCommandFuture != null) {
-            this.cleanerCommandFuture.cancel(false);
-        }
-        if (this.batchBannerCommandFuture != null) {
-            this.batchBannerCommandFuture.cancel(false);
-        }
+        this.cleanerCommandFuture.cancel(false);
+        this.cleanerScheduledExecutor.shutdown();
+
+        this.rotateBucketsCommandFuture.cancel(false);
+        this.rotateBucketsExecutor.shutdown();
 
         logger.info(getClass().getSimpleName() + " stopped");
     }
 
     public int getBannedIpCount() {
-        return statistics.bannedIpCount.get();
+        return bannedIpCount.get();
     }
 
     public int getBanTimeInSeconds() {
         return (int) banTimeInMillis / 1000;
     }
 
-    public int getBatchBannerExecutionCount() {
-        return statistics.batchBannerExecutionCount.get();
-    }
-
-    public long getBatchBannerTotalDurationInMillis() {
-        return statistics.batchBannerTotalDurationInMillis.get();
+    public int getBucketCount() {
+        return bucketCount;
     }
 
     public int getCleanerCommandIntervalInSeconds() {
         return cleanerCommandIntervalInSeconds;
-    }
-
-    public int getCleanerExecutionCount() {
-        return statistics.cleanerExecutionCount.get();
-    }
-
-    public long getCleanerTotalDurationInMillis() {
-        return statistics.cleanerTotalDurationInMillis.get();
-    }
-
-    public int getBucketsCount() {
-        return bucketsCount;
     }
 
     public int getCurrentlyBannedIpsCount() {
@@ -191,66 +215,73 @@ public class IpBanner implements IpBannerMBean {
     }
 
     public int getFailedAuthenticationCount() {
-        return statistics.failedAuthenticationCount.get();
+        return failedAuthenticationCount.get();
     }
 
     public int getFindTimeInSeconds() {
         return findTimeInSeconds;
     }
 
+    public int getMaxBucketRecycleCount() {
+        return maxBucketRecycleCount;
+    }
+
     public int getMaxRetry() {
         return maxRetry;
     }
 
-    public IpBannerStatistics getStatistics() {
-        return statistics;
-    }
-
     public void incrementFailureCounter(String ip) {
 
-        statistics.failedAuthenticationCount.incrementAndGet();
+        failedAuthenticationCount.incrementAndGet();
 
-        Bucket bucket = buckets.peekLast();
-        ConcurrentMap<String, AtomicInteger> failureCounterByIp = bucket.getFailureCounterByIp();
-        AtomicInteger bucketFailureCounter = failureCounterByIp.get(ip);
+        // INCREMENT CURRENT BUCKET FAILURE COUNT
+        Iterator<Bucket> firstToLastBucketIterator = buckets.iterator();
 
-        if (bucketFailureCounter == null) {
-            bucketFailureCounter = new AtomicInteger();
-            AtomicInteger concurrentlyAddedCounter = failureCounterByIp.put(ip, bucketFailureCounter);
-            if (concurrentlyAddedCounter != null) {
-                bucketFailureCounter = concurrentlyAddedCounter;
-            }
-        }
+        Bucket currentBucket = firstToLastBucketIterator.next();
 
-        int failureCount = bucketFailureCounter.incrementAndGet();
-
+        int failureCount = currentBucket.incrementFailureCountAndGet(ip);
         if (failureCount > maxRetry) {
             banIp(ip);
+            return;
         }
 
+        // ITERATE ON OLDER BUCKETS TO SEE IF MAX_RETRY IS REACHED
+        long previousBucketTime = currentBucket.getBucketChangeNumber();
+
+        while (firstToLastBucketIterator.hasNext()) {
+            Bucket loopBucket = (Bucket) firstToLastBucketIterator.next();
+            if (loopBucket.getBucketChangeNumber() > previousBucketTime) {
+                // rotation took place and the loopBucket has been recycled,
+                // ignore it
+                break;
+            } else {
+                failureCount += loopBucket.getFailureCount(ip);
+                previousBucketTime = loopBucket.getBucketChangeNumber();
+                if (failureCount > maxRetry) {
+                    banIp(ip);
+                    break;
+                }
+            }
+        }
     }
 
     @PostConstruct
     public void initialize() {
 
-        if (this.rotateBucketsAndBanIpsCommandScheduledExecutor == null) {
-            throw new IllegalArgumentException("rotateBucketsAndBanIpsCommandScheduledExecutor can NOT be null");
-        }
-        if (this.cleanerScheduledExecutor == null) {
-            throw new IllegalArgumentException("cleanerCommandScheduledExecutor can NOT be null");
-        }
+        buckets = new LinkedBlockingDeque<Bucket>(bucketCount);
+        buckets.add(new Bucket());
 
-        buckets = new LinkedBlockingDeque<Bucket>(bucketsCount);
-
-        Runnable batchBannerCommand = new Runnable() {
+        Runnable rotateBucketsCommand = new Runnable() {
 
             @Override
             public void run() {
-                rotateBucketsAndBanIps();
+                rotateBuckets();
             }
         };
-        batchBannerCommandFuture = rotateBucketsAndBanIpsCommandScheduledExecutor.scheduleAtFixedRate(batchBannerCommand, 0,
-                findTimeInSeconds * 1000 / bucketsCount, TimeUnit.MILLISECONDS);
+
+        int rotateCommandIntervalInMillis = findTimeInSeconds * 1000 / bucketCount;
+        rotateBucketsCommandFuture = rotateBucketsExecutor.scheduleAtFixedRate(rotateBucketsCommand, rotateCommandIntervalInMillis,
+                rotateCommandIntervalInMillis, TimeUnit.MILLISECONDS);
 
         Runnable cleanupBannedIpsCommand = new Runnable() {
 
@@ -261,8 +292,8 @@ public class IpBanner implements IpBannerMBean {
             }
         };
 
-        cleanerCommandFuture = cleanerScheduledExecutor.scheduleWithFixedDelay(cleanupBannedIpsCommand, 0, cleanerCommandIntervalInSeconds,
-                TimeUnit.SECONDS);
+        cleanerCommandFuture = cleanerScheduledExecutor.scheduleWithFixedDelay(cleanupBannedIpsCommand, cleanerCommandIntervalInSeconds,
+                cleanerCommandIntervalInSeconds, TimeUnit.SECONDS);
 
         logger.info(getClass().getSimpleName() + " started");
     }
@@ -277,7 +308,7 @@ public class IpBanner implements IpBannerMBean {
             banned = false;
             // cleanup map
             bannedIpWithBanishmentTime.remove(ip);
-            logger.debug("Unban {}", ip);
+            logger.info("Unban {}", ip);
         } else {
             logger.info("{} is banned", ip);
             banned = true;
@@ -286,95 +317,50 @@ public class IpBanner implements IpBannerMBean {
         return banned;
     }
 
-    protected void rotateBucketsAndBanIps() {
-        long startTime = System.currentTimeMillis();
+    protected void rotateBuckets() {
 
-        try {
-
-            // REMOVE OLDEST BUCKET
-            Bucket removedBucket;
-            if (buckets.remainingCapacity() == 0) {
-                removedBucket = buckets.removeFirst();
-                logger.debug("Remove {}", removedBucket);
-            } else {
-                removedBucket = null;
-            }
-
-            List<Bucket> bucketsCopy = new ArrayList<Bucket>(buckets);
-
-            // ADD NEW BUCKET
-            try {
-                buckets.putLast(new Bucket());
-            } catch (InterruptedException e) {
-                logger.warn("InterruptedException putting new bucket");
-            }
-
-            if (removedBucket != null) {
-
-                ConcurrentMap<String, AtomicInteger> aggregatedFailureCounterByIp = removedBucket.getFailureCounterByIp();
-
-                // SCAN BUCKETS TO BAN IP ADDRESSES
-
-                // aggregate failure counts
-                for (Bucket bucket : bucketsCopy) {
-                    for (Entry<String, AtomicInteger> entry : bucket.getFailureCounterByIp().entrySet()) {
-                        String ip = entry.getKey();
-                        AtomicInteger perBucketFailureCounter = entry.getValue();
-
-                        AtomicInteger failureCounter = aggregatedFailureCounterByIp.get(ip);
-                        if (failureCounter == null) {
-                            aggregatedFailureCounterByIp.put(ip, perBucketFailureCounter);
-                        } else {
-                            failureCounter.addAndGet(perBucketFailureCounter.get());
-                        }
-                    }
-                }
-
-                // ban if aggregated failure count exceeds threshold
-                for (Entry<String, AtomicInteger> entry : aggregatedFailureCounterByIp.entrySet()) {
-                    String ip = entry.getKey();
-                    int failureCount = entry.getValue().get();
-                    logger.trace("Evaluate aggregated {} : {} times", ip, failureCount);
-                    if (failureCount > maxRetry) {
-                        banIp(ip);
-                    }
-                }
-            }
-        } finally {
-            statistics.batchBannerExecutionCount.incrementAndGet();
-            long duration = System.currentTimeMillis() - startTime;
-            statistics.batchBannerTotalDurationInMillis.addAndGet(duration);
+        // REMOVE OLDEST BUCKET IF QUEUE IS FULL
+        Bucket bucket;
+        if (buckets.remainingCapacity() == 0) {
+            bucket = buckets.pollLast();
+            logger.debug("Remove {}", bucket);
+            // recycle bucket
+            bucket.recycle();
+        } else {
+            bucket = new Bucket();
         }
-    }
 
-    public void setRotateBucketsAndBanIpsCommandScheduledExecutor(ScheduledExecutorService rotateBucketsAndBanIpsCommandScheduledExecutor) {
-        this.rotateBucketsAndBanIpsCommandScheduledExecutor = rotateBucketsAndBanIpsCommandScheduledExecutor;
-    }
-
-    public void setCleanerScheduledExecutor(ScheduledExecutorService cleanerScheduledExecutor) {
-        this.cleanerScheduledExecutor = cleanerScheduledExecutor;
+        // ADD NEW BUCKET
+        boolean offered = buckets.offerFirst(bucket);
+        if (!offered) {
+            logger.warn("failed to insert a new bucket");
+        }
     }
 
     public void setBanTimeInSeconds(int banTimeInSeconds) {
         this.banTimeInMillis = banTimeInSeconds * 1000;
     }
 
+    public void setBucketCount(int bucketCount) {
+        if (buckets != null) {
+            throw new IllegalStateException("Can not set 'bucketCount', component already initialized");
+        }
+        this.bucketCount = bucketCount;
+    }
+
     public void setCleanerCommandIntervalInSeconds(int cleanerCommandIntervalInSeconds) {
         this.cleanerCommandIntervalInSeconds = cleanerCommandIntervalInSeconds;
     }
 
-    public void setBucketsCount(int bucketsCount) {
-        if (buckets != null) {
-            throw new IllegalStateException("Can not set 'bucketsCount', component already initialized");
-        }
-        this.bucketsCount = bucketsCount;
-    }
-
     public void setFindTimeInSeconds(int findTimeInSeconds) {
-        if (batchBannerCommandFuture != null) {
+        if (rotateBucketsCommandFuture != null) {
             throw new IllegalStateException("Can not set 'bucketDurationInSeconds', component already initialized");
         }
         this.findTimeInSeconds = findTimeInSeconds;
+    }
+
+    public void setMaxBucketRecycleCount(int maxBucketRecycleCount) {
+        this.maxBucketRecycleCount = maxBucketRecycleCount;
     }
 
     public void setMaxRetry(int maxRetry) {
@@ -384,7 +370,9 @@ public class IpBanner implements IpBannerMBean {
     @Override
     public String toString() {
         return "Banner[" //
-                + this.statistics.toString() // 
+                + "bannedIpCount:" + bannedIpCount + ", " //
+                + "failedAuthenticationCount: " + failedAuthenticationCount + ", " //
+                + "bucketChangeNumber: " + this.bucketChangeNumberCounter.get() //
                 + "]";
     }
 }
