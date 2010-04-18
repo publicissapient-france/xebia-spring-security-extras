@@ -6,6 +6,8 @@
       </encoder>
    </appender>
 
+  <logger name="fr.xebia.fail2ban" level="WARN" />
+
    <root level="warn">
       <appender-ref ref="STDOUT" />
    </root>
