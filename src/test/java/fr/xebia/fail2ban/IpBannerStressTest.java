@@ -41,6 +41,12 @@ public class IpBannerStressTest {
     @Test
     public void test() throws Exception {
 
+        System.out.println("Testing tips :");
+        System.out.println("- Start test with '" + "-Dcom.sun.management.jmxremote.port=6969 "
+                + "-Dcom.sun.management.jmxremote.ssl=false " + "-Dcom.sun.management.jmxremote.authenticate=false"
+                + "' and '-server' command line options");
+        System.out.println("- Follow MBean 'fr.xebia:type=RemoteAddressBanner' with visualVM MBean viewer or JConsole");
+
         final Random random = new Random();
         final int numberOfUnfrequentlyFailedIp = 100000;
         final int numberOfFrequentlyFailedIp = 10000;
