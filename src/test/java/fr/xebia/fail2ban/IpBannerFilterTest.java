@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.junit.Test;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.servlet.Context;
@@ -37,6 +38,7 @@ public class IpBannerFilterTest {
     /**
      * Test {@link IpBannerFilter} in Jetty standalone server
      */
+    @Test
     public void testWithTomcatServer() throws Exception {
 
         IpBannerFilter ipBannerFilter = new IpBannerFilter();

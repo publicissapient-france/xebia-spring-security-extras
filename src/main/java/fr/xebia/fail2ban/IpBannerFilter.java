@@ -31,8 +31,46 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** This filter checks if the Http response and ban IP address in case of authentication error.
+ * If the Http Response status is 401 (unauthorized), 403 (Forbidden) or custom defined response, the IP address is added to
+ * the list of failed attempts.
+ * If the number of failed attempts for the client IP address is greater than the number of maximum retry, the connection
+ * attempt is rejected (returns 403 error).
+ *
+ * The failureResponseStatusCodes filter property defines a comma separated list of Http Response status that implies a
+ * failed connection attempt.
+ *
+ * The maxRetry property defines the maximum number of failed attempts to connect (default is 10).
+ *
+ * Example of web.xml :
+ * <filter>
+ *   <filter-name>IP Banner</filter-name>
+ *   <display-name>IP Banner</display-name>
+ *   <filter-class>fr.xebia.fail2ban.IpBannerFilter</filter-class>
+ *   <init-param>
+ *     <param-name>failureResponseStatusCodes</param-name>
+ *     <param-value>401,403</param-value>
+ *   </init-param
+ *   <init-param>
+ *     <param-name>failureRequestAttributeName</param-name>
+ *     <param-value>IpBannerFilter.failure</param-value>
+ *   </init-param>>
+ *   <init-param>
+ *     <param-name>maxRetry</param-name>
+ *     <param-value>10</param-value>
+ *   </init-param>
+ *   <init-param>
+ *     <param-name>banTimeInSecond</param-name>
+ *     <param-value>60</param-value>
+ *   </init-param>
+ * </filter>
+ *
+ * @author <a href="mailto:cyrille@cyrilleleclerc.com">Cyrille Le Clerc</a>
+ */
 public class IpBannerFilter implements Filter {
 
+    /** Wrap the HttpServletResponse to get the http response status.
+     */
     public static class XHttpServletResponse extends HttpServletResponseWrapper {
 
         /**
@@ -94,6 +132,14 @@ public class IpBannerFilter implements Filter {
     public static final String FAILURE_REQUEST_ATTRIBUTE_NAME = "failureRequestAttributeName";
 
     public static final String FAILURE_RESPONSE_STATUS_CODES = "failureResponseStatusCodes";
+
+    public static final String MAX_RETRY_PARAMETER = "maxRetry";
+
+    private static final int DEFAULT_MAX_RETRY = 10;
+
+    private static final String BAN_TIME_PARAMETER = "banTimeInSecond";
+
+    private static final int DEFAULT_BAN_TIME = 60; 
 
     /**
      * Convert a comma delimited list of numbers into an <tt>int[]</tt>.
@@ -209,6 +255,18 @@ public class IpBannerFilter implements Filter {
         return failureRequestAttributeName;
     }
 
+    public int getIntParameter(FilterConfig filterConfig, String parameterName, int defaultValue) {
+        String value = filterConfig.getInitParameter(parameterName);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException(String.format("Exception parsing %s value '%s' as an integer.", parameterName, value));
+        }
+    }
+
     public String getFailureResponseStatusCodes() {
         return intsToCommaDelimitedString(failureResponseStatusCodes);
     }
@@ -221,11 +279,18 @@ public class IpBannerFilter implements Filter {
             setFailureResponseResponseStatusCodes(comaDelimitedResponseStatusCodes);
         }
 
-        setFailureRequestAttributeName(filterConfig.getInitParameter(FAILURE_REQUEST_ATTRIBUTE_NAME));
+        // Keep default value if not defined
+        if (filterConfig.getInitParameter(FAILURE_REQUEST_ATTRIBUTE_NAME) != null) {
+            setFailureRequestAttributeName(filterConfig.getInitParameter(FAILURE_REQUEST_ATTRIBUTE_NAME));
+        }
 
         ipBanner = new IpBanner();
 
         ipBanner.initialize();
+
+        ipBanner.setMaxRetry(getIntParameter(filterConfig, MAX_RETRY_PARAMETER, DEFAULT_MAX_RETRY));
+        ipBanner.setBanTimeInSeconds(getIntParameter(filterConfig, BAN_TIME_PARAMETER, DEFAULT_BAN_TIME));
+
     }
 
     protected boolean isFailedAuthentication(HttpServletRequest request, XHttpServletResponse xresponse) {
