@@ -3,52 +3,19 @@
 
    <modelVersion>4.0.0</modelVersion>
    <groupId>fr.xebia.springframework</groupId>
-   <artifactId>xebia-spring-security-extras</artifactId>
-   <packaging>jar</packaging>
+   <artifactId>xebia-ipbanner-parent</artifactId>
+   <packaging>pom</packaging>
    <version>0.1.0-SNAPSHOT</version>
    <scm>
       <connection>scm:svn:http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</connection>
       <developerConnection>scm:svn:https://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</developerConnection>
       <url>http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</url>
    </scm>
-   <dependencies>
-      <!-- Spring framework -->
-      <dependency>
-         <groupId>org.springframework</groupId>
-         <artifactId>spring-core</artifactId>
-         <version>${springframework.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.springframework</groupId>
-         <artifactId>spring-jdbc</artifactId>
-         <version>${springframework.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.springframework</groupId>
-         <artifactId>spring-test</artifactId>
-         <version>${springframework.version}</version>
-         <scope>test</scope>
-      </dependency>
-
-      <!-- Spring Security -->
-      <dependency>
-         <groupId>org.springframework.security</groupId>
-         <artifactId>spring-security-core</artifactId>
-         <version>${springframework-security.version}</version>
-         <scope>compile</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.springframework.security</groupId>
-         <artifactId>spring-security-config</artifactId>
-         <version>${springframework-security.version}</version>
-         <scope>compile</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.springframework.security</groupId>
-         <artifactId>spring-security-web</artifactId>
-         <version>${springframework-security.version}</version>
-         <scope>compile</scope>
-      </dependency>
+    <modules>
+        <module>xebia-ipbanner-core</module>
+        <module>xebia-ipbanner-spring-security</module>
+    </modules>
+    <dependencies>
 
       <!-- Other dependencies -->
       <dependency>
@@ -63,22 +30,10 @@
          <scope>test</scope>
       </dependency>
       <dependency>
-         <groupId>ch.qos.logback</groupId>
-         <artifactId>logback-classic</artifactId>
-         <version>0.9.20</version>
-         <scope>optional</scope>
-      </dependency>
-      <dependency>
          <groupId>javax.servlet</groupId>
          <artifactId>servlet-api</artifactId>
          <version>2.5</version>
          <scope>provided</scope>
-      </dependency>
-      <dependency>
-         <groupId>commons-dbcp</groupId>
-         <artifactId>commons-dbcp</artifactId>
-         <version>1.4</version>
-         <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>org.mortbay.jetty</groupId>
@@ -90,12 +45,6 @@
          <groupId>junit</groupId>
          <artifactId>junit</artifactId>
          <version>4.8.1</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>com.h2database</groupId>
-         <artifactId>h2</artifactId>
-         <version>1.2.133</version>
          <scope>test</scope>
       </dependency>
    </dependencies>
