@@ -44,6 +44,11 @@ public class ExtendedUser extends User implements UserDetails {
         super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
     }
 
+    public ExtendedUser(UserDetails userDetails) {
+        super(userDetails.getUsername(), userDetails.getPassword(), userDetails.isEnabled(), userDetails.isAccountNonExpired(),
+                userDetails.isCredentialsNonExpired(), userDetails.isAccountNonLocked(), userDetails.getAuthorities());
+    }
+
     /**
      * Override for FindBugs EQ_DOESNT_OVERRIDE_EQUALS
      */
