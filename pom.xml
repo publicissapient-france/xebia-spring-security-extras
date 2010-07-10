@@ -3,7 +3,7 @@
 
    <modelVersion>4.0.0</modelVersion>
    <groupId>fr.xebia.springframework</groupId>
-   <artifactId>xebia-ipbanner-parent</artifactId>
+   <artifactId>xebia-extra-spring-parent</artifactId>
    <packaging>pom</packaging>
    <version>0.1.0-SNAPSHOT</version>
    <scm>
@@ -12,8 +12,8 @@
       <url>http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</url>
    </scm>
     <modules>
-        <module>xebia-ipbanner-core</module>
-        <module>xebia-ipbanner-spring-security</module>
+        <module>xebia-extra-spring-security</module>
+        <!--module>xebia-extra-spring-security-ldap</module-->
     </modules>
     <dependencies>
 
