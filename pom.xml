@@ -13,13 +13,6 @@
       <url>http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</url>
    </scm>
     <dependencies>
-
-        <dependency>
-            <artifactId>ipbanner-core</artifactId>
-            <groupId>fr.xebia.ipbanner</groupId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
-
         <!-- Spring framework -->
         <dependency>
             <groupId>org.springframework</groupId>
