@@ -20,6 +20,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Mark a method to audit it using {@link fr.xebia.audit.AuditAspect}.
+ * Here is a code sample for method audit :
+ * <pre>
+ * <code>
+ * &#064;(message = "save(#{args[0]}, #{args[1]}): #{returned}")
+ *  public int save(String arg1, String arg2) { ... }
+ * </code>
+ * </pre>
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target( { ElementType.METHOD })
 public @interface Audited {
