@@ -36,35 +36,41 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * This Aspect audits methods surrounded by {@link fr.xebia.audit.Audited} annotation.
+ * This Aspect audits methods surrounded by {@link fr.xebia.audit.Audited}
+ * annotation.
  * <p>
- * The {@link fr.xebia.audit.Audited} message parameter can be an EL expression that will define the message that will
- * appear on logs.
- * <br/>
- * This message will be completed by the name (principal) of the active user. This aspect uses spring security context
- * to retrieve the name.
+ * The {@link fr.xebia.audit.Audited#message()} parameter can be expressed with a Spring
+ * Expression Language expression.<br/>
+ * This message will be prefixed by the date and suffixed by the name (principal) of the active user and
+ * the IP address of the user in web applications. This aspect uses spring
+ * security context to retrieve the name.
  * </p>
  * <p>
- * This aspect can be activated by defining {@link fr.xebia.audit.AuditAspect} as spring bean and assuring that AspectJ
- * support is activated in your spring configuration :
+ * This aspect can be activated by defining {@link fr.xebia.audit.AuditAspect}
+ * as spring bean and assuring that AspectJ support is activated in your spring
+ * configuration :
+ * 
  * <pre>
  * <code> 
- *  &lt;aop:aspectj-autoproxy&gt;
- *  &lt;bean class="fr.xebia.audit.Audited"&gt;
+ *  &lt;aop:aspectj-autoproxy /&gt;
+ *  &lt;bean class="fr.xebia.audit.AuditAspect" /&gt;
  * </code>
  * </pre>
+ * 
  * </p>
  * <p>
- * Using this aspect, all methods annotated with {@link fr.xebia.audit.Audited} will be logged at :
+ * Using this aspect, all methods annotated with {@link fr.xebia.audit.Audited}
+ * will be logged at :
  * <ul>
- *  <li>INFO level for method call</li>
- *  <li>WARN level if an exception is thrown</li>
+ * <li>INFO level for method call</li>
+ * <li>WARN level if an exception is thrown</li>
  * </ul>
- * when called.
- * <br/>
- * The template of the message is defined as a parameter of the {@link fr.xebia.audit.Audited} annotation :
+ * when called. <br/>
+ * The template of the message is defined as a parameter of the
+ * {@link fr.xebia.audit.Audited} annotation :
  * <code>@Audited(message = "save(#{args[0]}, #{args[1]}): #{returned}")</code>
- * will produce a log entry similar to : <code>...save(foo, bar): 2 by admin</code>
+ * will produce a log entry similar to :
+ * <code>...save(foo, bar): 2 by admin</code>
  * </p>
  * <p>
  * In case of exception thrown, the log entry will be : <code>...save(foo, ):  throwing 'java.lang.IllegalArgumentException: Unexpected null argument by admin</code>
