@@ -73,7 +73,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <code>...save(foo, bar): 2 by admin</code>
  * </p>
  * <p>
- * In case of exception thrown, the log entry will be : <code>...save(foo, ):  throwing 'java.lang.IllegalArgumentException: Unexpected null argument by admin</code>
+ * In case of exception thrown, the log entry will be : <code>...save(foo, ):  throwned 'java.lang.IllegalArgumentException: Unexpected null argument by admin</code>
  * </p>
  */
 @Aspect
@@ -177,7 +177,7 @@ public class AuditAspect {
             msg.append(" ").append(evaluatedMessage);
 
             if (throwned != null) {
-                msg.append(" throwing '");
+                msg.append(" throwned '");
                 appendThrowableCauses(throwned, ", ", msg);
             }
             msg.append(" by ");
