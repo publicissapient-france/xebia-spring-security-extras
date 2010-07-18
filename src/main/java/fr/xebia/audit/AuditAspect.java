@@ -70,10 +70,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * {@link fr.xebia.audit.Audited} annotation :
  * <code>@Audited(message = "save(#{args[0]}, #{args[1]}): #{returned}")</code>
  * will produce a log entry similar to :
- * <code>...save(foo, bar): 2 by admin</code>
+ * <code>...save(John Smith, john.smith@xebia.fr): 324325 by admin coming from 192.168.1.10</code>
  * </p>
  * <p>
- * In case of exception thrown, the log entry will be : <code>...save(foo, ):  throwned 'java.lang.IllegalArgumentException: Unexpected null argument by admin</code>
+ * In case of exception thrown, the log entry will be : <code>...save(John Smith, john.smith):
+ * thrown 'java.lang.IllegalArgumentException: incorrect email by admin coming from 192.168.1.10</code>
  * </p>
  */
 @Aspect
@@ -177,7 +178,7 @@ public class AuditAspect {
             msg.append(" ").append(evaluatedMessage);
 
             if (throwned != null) {
-                msg.append(" throwned '");
+                msg.append(" thrown");
                 appendThrowableCauses(throwned, ", ", msg);
             }
             msg.append(" by ");

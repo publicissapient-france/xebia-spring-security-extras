@@ -21,14 +21,47 @@ package fr.xebia.audit;
  */
 public class SimpleAuditedService {
 
-    @Audited(message = "save(#{args[0]}, #{args[1]}): #{returned}")
-    public int save(String arg1, String arg2) {
-        return 2;
+    @Audited(message = "save(#{args[0].name}, #{args[0].email}): #{returned?.id}")
+    public Customer save(Customer customer) {
+        if (customer.getEmail().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,3}$")) {
+            customer.setId(324325L);
+            return customer;
+        } else {
+            throw new IllegalArgumentException("incorrect email");
+        }
     }
 
-    @Audited(message = "save(#{args[0]}, #{args[1]}, #{args[2]}): #{returned}")
-    public int save(String arg1, String arg2, String arg3) {
-        throw new IllegalArgumentException("Unexpected null argument");
-    }
+    public static class Customer {
+        private Long id;
+        private String name;
+        private String email;
 
+        public Long getId() {
+            return id;
+        }
+
+        private void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String toString() {
+            return String.format("[id=%s,name=%s,email=%s]", id, name, email);
+        }
+    }
 }

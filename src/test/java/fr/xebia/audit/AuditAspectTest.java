@@ -42,12 +42,18 @@ public class AuditAspectTest {
 
     @Test
     public void testSaveMethod() {
-        simpleAuditedService.save("foo", "bar");
+        SimpleAuditedService.Customer customer = new SimpleAuditedService.Customer();
+        customer.setName("John Smith");
+        customer.setEmail("john.smith@xebia.fr");
+        simpleAuditedService.save(customer);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testSaveMethodThrowNPE() {
-        simpleAuditedService.save("foo", "bar", "badArg");
+    public void testSaveMethodThrowIAE() {
+        SimpleAuditedService.Customer customer = new SimpleAuditedService.Customer();
+        customer.setName("John Smith");
+        customer.setEmail("john.smith");
+        simpleAuditedService.save(customer);
     }
 
 }
