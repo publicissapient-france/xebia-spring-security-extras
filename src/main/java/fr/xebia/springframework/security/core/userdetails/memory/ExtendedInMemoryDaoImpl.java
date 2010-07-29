@@ -23,7 +23,8 @@ import org.springframework.security.core.userdetails.memory.UserMap;
 import java.util.Properties;
 
 
-/** Extension of the {@link org.springframework.security.core.userdetails.memory.InMemoryDaoImpl} to add support for
+/**
+ * Extension of the {@link org.springframework.security.core.userdetails.memory.InMemoryDaoImpl} to add support for
  * allowed IP address definition.<br/>
  *
  * This implementation of {@link org.springframework.security.core.userdetails.UserDetailsService} must be used with
@@ -31,15 +32,18 @@ import java.util.Properties;
  *
  * <p>The users will be defined as :
  * <code>username=password,grantedAuthority[,grantedAuthority][,enabled|disabled][,@(allowedIpAddress)]</code></p>
- * <p>The <code>allowedIpAddress</code> is a semi-column separated list of IP address schemes.<br/>
+ * <p>The <code>allowedIpAddress</code> is a semicolon separated list of IP address schemes.<br/>
  * For example : <code>bob:bobpassword,ROLE,USER_ROLE,enabled,@(192.168.1.*;127.0.0.1)</code></p>
  *
  * @see fr.xebia.springframework.security.core.userdetails.ExtendedUser
- * @author David Galichet
+ * @author David Galichet.
  */
+// Suppress warning for deprecated UserMap until InMemoryDaoImpl will use it:
+@SuppressWarnings("deprecation")
 public class ExtendedInMemoryDaoImpl extends InMemoryDaoImpl {
 
-    /** Extend {@link org.springframework.security.core.userdetails.memory.InMemoryDaoImpl} to add support for allowed IP address.
+    /**
+     * Extend {@link org.springframework.security.core.userdetails.memory.InMemoryDaoImpl} to add support for allowed IP address.
      * @param properties the account information in a <code>Properties</code> object format
      */
     @Override
