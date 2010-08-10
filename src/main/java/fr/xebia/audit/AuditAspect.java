@@ -152,7 +152,7 @@ public class AuditAspect {
         }
     }
 
-    private SimpleDateFormat dateFormatPrototype = new SimpleDateFormat("yyyy/MM/dd-HH:mm:ss:SSS");
+    private SimpleDateFormat dateFormatPrototype = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
 
     private Map<String, Expression> expressionCache = new ConcurrentHashMap<String, Expression>();
 

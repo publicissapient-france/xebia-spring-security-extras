@@ -33,12 +33,12 @@ public class Auditor {
 
     private final static Logger auditLogger = LoggerFactory.getLogger("fr.xebia.audit");
 
-    private static SimpleDateFormat dateFormatPrototype = new SimpleDateFormat("yyyy/MM/dd-HH:mm:ss:SSS");
+    private static SimpleDateFormat dateFormatPrototype = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
 
     /**
      * <p>
      * Emmits the audit message : <code>
-     * "$date{yyyy/MM/dd-HH:mm:ss:SSS} ${message} by ${spring-security-user}|anonymous [coming from ${remote-address}]"</code>.
+     * "$date{yyyy-MM-dd'T'HH:mm:ss.SSSZZ} ${message} by ${spring-security-user}|anonymous [coming from ${remote-address}]"</code>.
      * <p>
      * <p>
      * If the Spring Security authentication is <code>null</code>, 'anonymous'
