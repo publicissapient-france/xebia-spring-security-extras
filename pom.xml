@@ -5,7 +5,7 @@
    <artifactId>xebia-spring-security-extras</artifactId>
    <name>xebia-spring-security-extras</name>
    <packaging>jar</packaging>
-   <version>1.1-SNAPSHOT</version>
+   <version>1.1.0-SNAPSHOT</version>
    <scm>
       <connection>scm:svn:http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</connection>
       <developerConnection>scm:svn:https://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</developerConnection>
