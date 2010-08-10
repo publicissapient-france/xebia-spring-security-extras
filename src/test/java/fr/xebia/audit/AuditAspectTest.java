@@ -16,12 +16,15 @@
 
 package fr.xebia.audit;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -32,16 +35,28 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration(locations = "classpath:fr/xebia/audit/test-springContext.xml")
 public class AuditAspectTest {
 
-    private Logger logger = LoggerFactory.getLogger(AuditAspectTest.class);
-
     @Autowired
     private SimpleAuditedService simpleAuditedService;
 
+    @After
+    public void after() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Before
-    public void init() { }
+    public void before() {
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRemoteAddr("10.0.0.1");
+        WebAuthenticationDetails details = new WebAuthenticationDetails(request);
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken("ze-principal", "ze-credentials");
+        authentication.setDetails(details);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+    }
 
     @Test
-    public void testSaveMethod() {
+    public void testMethodWithoutException() {
         SimpleAuditedService.Customer customer = new SimpleAuditedService.Customer();
         customer.setName("John Smith");
         customer.setEmail("john.smith@xebia.fr");
@@ -49,11 +64,12 @@ public class AuditAspectTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testSaveMethodThrowIAE() {
+    public void testMethodWithException() {
         SimpleAuditedService.Customer customer = new SimpleAuditedService.Customer();
         customer.setName("John Smith");
         customer.setEmail("john.smith");
         simpleAuditedService.save(customer);
+
     }
 
 }

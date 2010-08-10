@@ -39,11 +39,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * This Aspect audits methods surrounded by {@link fr.xebia.audit.Audited}
  * annotation.
  * <p>
- * The {@link fr.xebia.audit.Audited#message()} parameter can be expressed with a Spring
- * Expression Language expression.<br/>
- * This message will be prefixed by the date and suffixed by the name (principal) of the active user and
- * the IP address of the user in web applications. This aspect uses spring
- * security context to retrieve the name.
+ * The {@link fr.xebia.audit.Audited#message()} parameter can be expressed with
+ * a Spring Expression Language expression.<br/>
+ * This message will be prefixed by the date and suffixed by the name
+ * (principal) of the active user and the IP address of the user in web
+ * applications. This aspect uses spring security context to retrieve the name.
  * </p>
  * <p>
  * This aspect can be activated by defining {@link fr.xebia.audit.AuditAspect}
@@ -60,12 +60,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * </p>
  * <p>
  * Using this aspect, all methods annotated with {@link fr.xebia.audit.Audited}
- * will be logged at :
+ * will be logged in SLF4F <code>"fr.xebia.audit"</code> logger with :
+ * </p>
  * <ul>
- * <li>INFO level for method call</li>
- * <li>WARN level if an exception is thrown</li>
+ * <li>INFO level for method calls</li>
+ * <li>WARN level for method calls wich throw exceptions</li>
  * </ul>
- * when called. <br/>
+ * <p>
  * The template of the message is defined as a parameter of the
  * {@link fr.xebia.audit.Audited} annotation :
  * <code>@Audited(message = "save(#{args[0]}, #{args[1]}): #{returned}")</code>
@@ -73,7 +74,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * <code>...save(John Smith, john.smith@xebia.fr): 324325 by admin coming from 192.168.1.10</code>
  * </p>
  * <p>
- * In case of exception thrown, the log entry will be : <code>...save(John Smith, john.smith):
+ * In case of exception thrown, the log entry will be :
+ * <code>...save(John Smith, john.smith):
  * thrown 'java.lang.IllegalArgumentException: incorrect email by admin coming from 192.168.1.10</code>
  * </p>
  */
