@@ -180,7 +180,7 @@ public class AuditAspect {
             msg.append(" ").append(evaluatedMessage);
 
             if (throwned != null) {
-                msg.append(" thrown");
+                msg.append(" threw");
                 appendThrowableCauses(throwned, ", ", msg);
             }
             msg.append(" by ");
