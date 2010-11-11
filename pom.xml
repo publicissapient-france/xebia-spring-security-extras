@@ -183,7 +183,14 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
          </plugin>
       </plugins>
    </reporting>
-
+   <licenses>
+      <license>
+         <name>Apache 2</name>
+         <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+         <distribution>repo</distribution>
+         <comments>A business-friendly OSS license</comments>
+      </license>
+   </licenses>
    <properties>
       <springframework.version>3.0.3.RELEASE</springframework.version>
       <springframework-security.version>3.0.3.RELEASE</springframework-security.version>
