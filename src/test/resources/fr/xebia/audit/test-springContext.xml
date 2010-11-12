@@ -14,13 +14,15 @@
 <!-- See the License for the specific language governing permissions and -->
 <!-- limitations under the License. -->
 <!-- -->
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:aop="http://www.springframework.org/schema/aop"
+   xmlns:security-extras="http://www.xebia.fr/schema/xebia-spring-security-extras"
+   xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.xebia.fr/schema/xebia-spring-security-extras http://xebia-france.googlecode.com/svn/schema/security/xebia-spring-security-extras.xsd">
 
     <aop:aspectj-autoproxy/>
-    <bean class="fr.xebia.audit.AuditAspect"/>
+    <security-extras:audit-aspect />
     <bean id="simpleAuditedService" class="fr.xebia.audit.SimpleAuditedService"/>
     
 </beans>
