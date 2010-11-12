@@ -14,8 +14,7 @@
 <!-- See the License for the specific language governing permissions and -->
 <!-- limitations under the License. -->
 <!-- -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    <modelVersion>4.0.0</modelVersion>
    <parent>
       <groupId>org.sonatype.oss</groupId>
@@ -26,11 +25,11 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
    <artifactId>xebia-spring-security-extras</artifactId>
    <name>xebia-spring-security-extras</name>
    <packaging>jar</packaging>
-   <version>1.1.4-SNAPSHOT</version>
+   <version>1.1.4</version>
    <scm>
-      <connection>scm:svn:http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</connection>
-      <developerConnection>scm:svn:https://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</developerConnection>
-      <url>http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</url>
+      <connection>scm:svn:http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/tags/xebia-spring-security-extras-1.1.4</connection>
+      <developerConnection>scm:svn:https://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/tags/xebia-spring-security-extras-1.1.4</developerConnection>
+      <url>http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/tags/xebia-spring-security-extras-1.1.4</url>
    </scm>
     <dependencies>
         <!-- Spring framework -->
