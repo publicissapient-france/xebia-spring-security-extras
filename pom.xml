@@ -200,8 +200,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
       </license>
    </licenses>
    <properties>
-      <springframework.version>3.0.3.RELEASE</springframework.version>
-      <springframework-security.version>3.0.3.RELEASE</springframework-security.version>
+      <springframework.version>3.0.5.RELEASE</springframework.version>
+      <springframework-security.version>3.0.4.RELEASE</springframework-security.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
    </properties>
 </project>
