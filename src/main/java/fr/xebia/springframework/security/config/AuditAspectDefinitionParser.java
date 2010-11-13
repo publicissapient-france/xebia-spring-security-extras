@@ -25,7 +25,7 @@ import org.w3c.dom.Element;
 import fr.xebia.audit.AuditAspect;
 
 /**
- * Parser of the &lt;management:audit-aspect /&gt; configuration element.
+ * Parser of the &lt;security-extras:audit-aspect /&gt; configuration element.
  * 
  * @author <a href="mailto:cyrille@cyrilleleclerc.com">Cyrille Le Clerc</a>
  */
