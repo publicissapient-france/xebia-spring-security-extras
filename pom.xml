@@ -26,6 +26,8 @@
    <name>xebia-spring-security-extras</name>
    <packaging>jar</packaging>
    <version>1.1.5-SNAPSHOT</version>
+   <url>http://code.google.com/p/xebia-france/wiki/XebiaSpringSecurityExtras</url>
+   <description>Spring Security Extras</description>
    <scm>
       <connection>scm:svn:http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</connection>
       <developerConnection>scm:svn:https://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</developerConnection>
@@ -182,7 +184,6 @@
          </plugin>
       </plugins>
    </reporting>
-   <url>http://code.google.com/p/xebia-france/wiki/XebiaSpringSecurityExtras</url>
    <developers>
       <developer>
          <id>1</id>
@@ -195,7 +196,6 @@
          <name>Apache 2</name>
          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
          <distribution>repo</distribution>
-         <comments>A business-friendly OSS license</comments>
       </license>
    </licenses>
    <properties>
