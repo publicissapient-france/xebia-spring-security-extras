@@ -13,4 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-http\://xebia-france.googlecode.com/svn/schema/security/xebia-spring-security-extras.xsd=fr/xebia/springframework/security/config/xebia-spring-security-extras.xsd
+http\://www.xebia.com/schema/security/xebia-spring-security-extras.xsd=fr/xebia/springframework/security/config/xebia-spring-security-extras.xsd

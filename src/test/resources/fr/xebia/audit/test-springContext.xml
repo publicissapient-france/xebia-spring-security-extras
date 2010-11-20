@@ -19,7 +19,7 @@
    xmlns:security-extras="http://www.xebia.fr/schema/xebia-spring-security-extras"
    xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-        http://www.xebia.fr/schema/xebia-spring-security-extras http://xebia-france.googlecode.com/svn/schema/security/xebia-spring-security-extras.xsd">
+        http://www.xebia.fr/schema/xebia-spring-security-extras http://www.xebia.com/schema/security/xebia-spring-security-extras.xsd">
 
     <aop:aspectj-autoproxy/>
     <security-extras:audit-aspect />
