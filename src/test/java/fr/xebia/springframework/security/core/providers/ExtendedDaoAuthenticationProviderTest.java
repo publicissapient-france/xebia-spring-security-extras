@@ -15,7 +15,11 @@
  */
 package fr.xebia.springframework.security.core.providers;
 
-import fr.xebia.springframework.security.core.userdetails.ExtendedUser;
+import static org.junit.Assert.fail;
+
+import java.util.Collection;
+import java.util.Collections;
+
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,11 +27,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
-import java.util.Collection;
-import java.util.Collections;
-
-import static org.junit.Assert.*;
-import static org.junit.Assert.fail;
+import fr.xebia.springframework.security.core.userdetails.ExtendedUser;
 
 public class ExtendedDaoAuthenticationProviderTest {
 

@@ -18,6 +18,8 @@ package fr.xebia.springframework.security.core.userdetails.memory;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.security.core.userdetails.memory.InMemoryDaoImpl;
+import org.springframework.security.core.userdetails.memory.UserMap;
 
 import java.util.Properties;
 
@@ -26,10 +28,16 @@ import static org.junit.Assert.*;
 /**
  * @author David Galichet
  */
+/**
+ * Suppress deprecation warning on {@link UserMap} because {@link InMemoryDaoImpl} also
+ * suppress warnings on deprecation.
+ */
+@SuppressWarnings("deprecation")
 public class ExtendedInMemoryDaoImplTest {
 
     @Before
-    public void setUp() throws Exception { }
+    public void setUp() throws Exception {
+    }
 
     @Test
     public void testSetUserNullProperties() {
@@ -42,7 +50,8 @@ public class ExtendedInMemoryDaoImplTest {
     public void testSetUserBadProperties() {
         ExtendedInMemoryDaoImpl dao = new ExtendedInMemoryDaoImpl();
         Properties properties = new Properties();
-        properties.setProperty("bill", ""); // at least password is mandatory so it will fail
+        properties.setProperty("bill", ""); // at least password is mandatory so
+                                            // it will fail
         dao.setUserProperties(properties);
         assertEquals("Unexpected user", 0, dao.getUserMap().getUserCount());
     }
@@ -51,7 +60,7 @@ public class ExtendedInMemoryDaoImplTest {
     public void testSetUserProperties() {
         final String USER1 = "bob";
         final String PROP1 = "bobpassword,ROLE,USER_ROLE,enabled,@(192.168.1.*;127.0.0.1)";
-        
+
         ExtendedInMemoryDaoImpl dao = new ExtendedInMemoryDaoImpl();
         Properties properties = new Properties();
         properties.setProperty(USER1, PROP1);
