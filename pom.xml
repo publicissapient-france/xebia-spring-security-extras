@@ -190,6 +190,11 @@
          <name>Cyrille Le Clerc</name>
          <email>cleclerc@xebia.fr</email>
       </developer>
+      <developer>
+         <id>2</id>
+         <name>David Galichet</name>
+         <email>dgalichet@xebia.fr</email>
+      </developer>
    </developers>
    <licenses>
       <license>
