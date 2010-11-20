@@ -25,13 +25,13 @@
    <artifactId>xebia-spring-security-extras</artifactId>
    <name>xebia-spring-security-extras</name>
    <packaging>jar</packaging>
-   <version>1.1.5</version>
+   <version>1.1.6-SNAPSHOT</version>
    <url>http://code.google.com/p/xebia-france/wiki/XebiaSpringSecurityExtras</url>
    <description>Spring Security Extras (@audited, etc)</description>
    <scm>
-      <connection>scm:svn:http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/tags/xebia-spring-security-extras-1.1.5</connection>
-      <developerConnection>scm:svn:https://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/tags/xebia-spring-security-extras-1.1.5</developerConnection>
-      <url>http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/tags/xebia-spring-security-extras-1.1.5</url>
+      <connection>scm:svn:http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</connection>
+      <developerConnection>scm:svn:https://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</developerConnection>
+      <url>http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</url>
    </scm>
     <dependencies>
         <!-- Spring framework -->
