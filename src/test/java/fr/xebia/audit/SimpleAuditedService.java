@@ -27,7 +27,7 @@ public class SimpleAuditedService {
             customer.setId(324325L);
             return customer;
         } else {
-            throw new IllegalArgumentException("incorrect email");
+            throw new IllegalArgumentException("invalid email");
         }
     }
 
