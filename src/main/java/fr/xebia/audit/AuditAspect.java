@@ -76,7 +76,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  * In case of exception thrown, the log entry will be :
  * <code>...save(John Smith, john.smith):
- * thrown 'java.lang.IllegalArgumentException: incorrect email by admin coming from 192.168.1.10</code>
+ * threw 'java.lang.IllegalArgumentException: incorrect email by admin coming from 192.168.1.10</code>
  * </p>
  */
 @Aspect
@@ -180,8 +180,9 @@ public class AuditAspect {
             msg.append(" ").append(evaluatedMessage);
 
             if (throwned != null) {
-                msg.append(" threw ");
+                msg.append(" threw '");
                 appendThrowableCauses(throwned, ", ", msg);
+                msg.append("'");
             }
             msg.append(" by ");
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
