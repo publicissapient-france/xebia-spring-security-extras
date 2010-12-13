@@ -13,4 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# deprecated
+# mistake for the first version, we mapped xebia.com instead of xebia.fr. Keep it for backward compatibility
 http\://www.xebia.com/schema/security/xebia-spring-security-extras.xsd=fr/xebia/springframework/security/config/xebia-spring-security-extras.xsd
+
+
+http\://www.xebia.fr/schema/security/xebia-spring-security-extras.xsd=fr/xebia/springframework/security/config/xebia-spring-security-extras.xsd
