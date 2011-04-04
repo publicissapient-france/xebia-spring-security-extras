@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This Aspect audits methods surrounded by {@link fr.xebia.audit.Audited}
@@ -162,7 +163,7 @@ public class AuditAspect {
 
     private ParserContext parserContext = new TemplateParserContext();
 
-    protected String buildMessage(String template, Object invokedObject, Object[] args, Object returned, Throwable throwned) {
+    protected String buildMessage(String template, Object invokedObject, Object[] args, Object returned, Throwable throwned, long durationInNanos) {
         try {
             Expression expression = expressionCache.get(template);
             if (expression == null) {
@@ -195,6 +196,7 @@ public class AuditAspect {
                     msg.append(" coming from " + details.getRemoteAddress());
                 }
             }
+            msg.append(" in ") .append(TimeUnit.MILLISECONDS.convert(durationInNanos, TimeUnit.NANOSECONDS)).append(" ms");
             return msg.toString();
         } catch (RuntimeException e) {
             StringBuilder msg = new StringBuilder("Exception evaluating template '" + template + "': ");
@@ -206,13 +208,16 @@ public class AuditAspect {
     @Around(value = "execution(* *(..)) && @annotation(audited)", argNames = "pjp,audited")
     public Object logMessage(ProceedingJoinPoint pjp, Audited audited) throws Throwable {
 
+        long nanosBefore = System.nanoTime();
         try {
             Object returned = pjp.proceed();
-            String message = buildMessage(audited.message(), pjp.getThis(), pjp.getArgs(), returned, null);
+            long durationInNanos = System.nanoTime() - nanosBefore;
+            String message = buildMessage(audited.message(), pjp.getThis(), pjp.getArgs(), returned, null, durationInNanos);
             logger.info(message);
             return returned;
         } catch (Throwable t) {
-            String message = buildMessage(audited.message(), pjp.getThis(), pjp.getArgs(), null, t);
+            long durationInNanos = System.nanoTime() - nanosBefore;
+            String message = buildMessage(audited.message(), pjp.getThis(), pjp.getArgs(), null, t, durationInNanos);
             logger.warn(message);
             throw t;
         }
