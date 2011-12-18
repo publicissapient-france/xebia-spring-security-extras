@@ -87,7 +87,7 @@ The `@Audited` annotation relies on [SLF4J](http://www.slf4j.org/) to generate i
 
 Note that the appender is not configured to append the date, the thread name or the log level, the audit aspect already appends the date and the thread and level are usually not necessary for auditing.
 
-=== Logback configuration sample ===
+### Logback configuration sample
 
 This Logback configuration fragment shows how to log "`fr.xebia.audit`" audit messages in a file named  "`my-application-audit.log`" that is rolled and zipped every night to a collect folder (`${LOGS_TO_COLLECT_FOLDER} `).
 
@@ -111,7 +111,7 @@ This Logback configuration fragment shows how to log "`fr.xebia.audit`" audit me
 </configuration>
 ````
 
-=== Log4j configuration sample ===
+### Log4j configuration sample
 
 This Log4j configuration fragment shows how to log "`fr.xebia.audit`" audit messages in a file named  "`my-application-audit.log`" that is rolled every night.
 
@@ -170,7 +170,7 @@ There are different ways to integrate these features in your project:
 Implementation decisions and details
 ------------------------------------
 
-=== Choosing a logging framework to handle audit messages ===
+### Choosing a logging framework to handle audit messages
 
 Audit messages are outputted to a logging framework. Here are the pros and cons we evaluated :
 
@@ -188,7 +188,7 @@ As a Java logging framework, we chose the [SLF4J](http://www.slf4j.org/) facade 
  * it works with [LogBack](http://logback.qos.ch/) which is our preferred logging framework,
  * it works with [Log4j](http://logging.apache.org/log4j/) that is very frequently used and is well suited for auditing.
 
-=== Declarative approach and AOP ===
+### Declarative approach and AOP
 
 We decided to use an annotation based declarative approach that would be homogeneous with the Spring 2.5+ & Java EE 5+ programming styles with all their annotations (security - `@RolesAllowed`), transaction - `@Transactional`), etc ).
 
@@ -196,7 +196,7 @@ Developers would just have to decorate their methods with a `@Audited` annotatio
 
 `@Audited` annotated methods are intercepted at runtime thanks to [ Spring AOP](http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/aop.html) and [AspectJ's](http://www.eclipse.org/aspectj/)  [@Around](http://www.eclipse.org/aspectj/doc/released/aspectj5rt-api/org/aspectj/lang/annotation/Around.html) annotation (see [AuditAspect.java](https://github.com/xebia-france/xebia-spring-security-extras/blob/ee0fd5095d854f6c0e75fba21b6a9c697be56b02/src/main/java/fr/xebia/audit/AuditAspect.java)).
 
-=== Expression language based messages ===
+### Expression language based messages
 
 The smoothest technique we found to allow developer to build audit messages composed with parameters/returned-value/throwned-exception of audited methods was to exposed these in an expression language. This approach was consistent with the increasing role of expression languages in java frameworks (see Spring Expression Language, etc).
 An other approach would have been to follow the [Inspektr](https://github.com/dima767/inspektr) way and ask developers to develop one "message builder class" per audited method.
@@ -207,6 +207,6 @@ The first versions of the @Audited annotations (2008) used JEXL, when we decided
 
 The `@Audited` annotation uses [Spring Expression Language's](http://static.springsource.org/spring/docs/3.0.0.M3/spring-framework-reference/html/ch07.html) [SpelExpressionParser](http://static.springsource.org/spring/docs/3.0.x/javadoc-api/org/springframework/expression/spel/standard/SpelExpressionParser.html)  (see [AuditAspect.java](https://github.com/xebia-france/xebia-spring-security-extras/blob/ee0fd5095d854f6c0e75fba21b6a9c697be56b02/src/main/java/fr/xebia/audit/AuditAspect.java)).
 
-=== XML Namespace based Spring configuration ===
+### XML Namespace based Spring configuration
 
 Spring XML namespace based configuration is performed thanks to Spring's [BeanDefinitionParser](http://static.springsource.org/spring/docs/3.0.0.M3/spring-framework-reference/html/apbs04.html) (see [AuditAspectDefinitionParser.java](https://github.com/xebia-france/xebia-spring-security-extras/blob/d6875ec63a8b674765721755eb358b3419d45255/src/main/java/fr/xebia/springframework/security/config/AuditAspectDefinitionParser.java )).
