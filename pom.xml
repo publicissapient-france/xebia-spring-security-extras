@@ -29,9 +29,9 @@
    <url>http://code.google.com/p/xebia-france/wiki/XebiaSpringSecurityExtras</url>
    <description>Spring Security Extras (@audited, etc)</description>
    <scm>
-      <connection>scm:svn:http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</connection>
-      <developerConnection>scm:svn:https://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</developerConnection>
-      <url>http://xebia-france.googlecode.com/svn/springframework/xebia-spring-security-extras/trunk</url>
+      <connection>scm:git:git://github.com/xebia-france/xebia-spring-security-extras.git</connection>
+      <developerConnection>scm:git:git@github.com:xebia-france/xebia-spring-security-extras.git</developerConnection>
+      <url>https://github.com/xebia-france/xebia-spring-security-extras</url>
    </scm>
     <dependencies>
         <!-- Spring framework -->
