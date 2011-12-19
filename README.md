@@ -9,7 +9,7 @@ Audit
 @Audited
 --------
 
-See [AuditedAnnotation](wiki/AuditedAnnotation). Simply add declarative auditing in your application using an `@Audited` annotation like this:
+See [AuditedAnnotation](https://github.com/xebia-france/xebia-spring-security-extras/wiki/AuditedAnnotation). Simply add declarative auditing in your application using an `@Audited` annotation like this:
 
 ````java
 @Audited(message = "transferMoney(#{args[0].accountNumber}, #{args[1].accountNumber}, #{args[3].amount})")
