@@ -34,10 +34,21 @@ import java.io.IOException;
  * <p>Roundtrip to the CAS server is triggered:
  * <ul>
  * <li>when user not authenticated (including {@link AnonymousAuthenticationToken})
- * or authenticated in a remember-me mode {@link RememberMeAuthenticationToken}</li>,
- * <li>throwing a {@link org.springframework.security.authentication.InsufficientAuthenticationException}.</li>
+ * or authenticated in a remember-me mode {@link RememberMeAuthenticationToken}</li>
+ * <li>throwing an instance of {@link org.springframework.security.authentication.InsufficientAuthenticationException}</li>
  * </ul></p>
  * <p>A protection against infinite redirection is managed with the <code>TRANSPARENT_AUTHENTICATION_IN_ACTION</code> session attribute.</p>
+ * <p/>
+ * <p>Sample of {@link TransparentCasAuthenticationFilter} usage with Srping Security configuration</p>
+ * <code><pre>
+ * &lt;sec:http entry-point-ref="casEntryPoint" use-expressions="true" servlet-api-provision="true" &gt;
+ *    &lt;sec:intercept-url pattern="/" ... /&gt;
+ *    ...
+ *    &lt;sec:custom-filter ref="transparentCasAuthenticationFilter" after="EXCEPTION_TRANSLATION_FILTER" /&gt;
+ *    ...
+ * &lt;/sec:http&gt;
+ * &lt;bean id="transparentCasAuthenticationFilter" class="fr.xebia.springframework.security.cas.web.TransparentCasAuthenticationFilter" /&gt;
+ * </pre></code>
  *
  * @author <a href="mailto:cleclerc@xebia.fr">Cyrille Le Clerc</a>
  */
