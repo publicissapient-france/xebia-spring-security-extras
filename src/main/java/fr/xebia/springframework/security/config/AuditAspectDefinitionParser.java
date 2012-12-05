@@ -17,6 +17,7 @@ package fr.xebia.springframework.security.config;
 
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.AbstractSimpleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.util.StringUtils;
@@ -26,7 +27,7 @@ import fr.xebia.audit.AuditAspect;
 
 /**
  * Parser of the &lt;security-extras:audit-aspect /&gt; configuration element.
- * 
+ *
  * @author <a href="mailto:cyrille@cyrilleleclerc.com">Cyrille Le Clerc</a>
  */
 public class AuditAspectDefinitionParser extends AbstractSimpleBeanDefinitionParser {
@@ -45,5 +46,10 @@ public class AuditAspectDefinitionParser extends AbstractSimpleBeanDefinitionPar
         }
 
         return id;
+    }
+
+    protected void postProcess(BeanDefinitionBuilder beanDefinition, Element element) {
+        // see http://static.springsource.org/spring/docs/3.1.x/spring-framework-reference/html/aop.html#aop-aj-configure
+        beanDefinition.setFactoryMethod("aspectOf");
     }
 }
