@@ -1,3 +1,5 @@
+[![Build Status](https://buildhive.cloudbees.com/job/xebia-france/job/xebia-spring-security-extras/badge/icon)](https://buildhive.cloudbees.com/job/xebia-france/job/xebia-spring-security-extras/)
+
 Introduction
 ============
 
